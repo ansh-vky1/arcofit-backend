@@ -6,15 +6,22 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
+  let serviceAccount;
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_B64) {
+    serviceAccount = JSON.parse(
+      Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_B64, "base64").toString("utf8")
+    );
+  } else {
+    serviceAccount = {
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-    }),
+    };
+  }
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
   });
 }
-const db = admin.firestore();
 
 const ORIGINAL_PAISE = parseInt(process.env.ORIGINAL_PRICE_PAISE || "49900", 10);
 const EXPIRY_EPOCH_SEC = parseInt(process.env.EXPIRY_EPOCH_SEC || "1802716199", 10);
